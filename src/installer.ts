@@ -68,6 +68,10 @@ function isPathSafe(basePath: string, targetPath: string): boolean {
   return normalizedTarget.startsWith(normalizedBase + sep) || normalizedTarget === normalizedBase;
 }
 
+function pathsOverlap(pathA: string, pathB: string): boolean {
+  return isPathSafe(pathA, pathB) || isPathSafe(pathB, pathA);
+}
+
 // Dirent.isDirectory() is false for symlinks; follow and verify the target is a directory.
 async function isDirEntryOrSymlinkToDir(
   entry: { isDirectory(): boolean; isSymbolicLink(): boolean },
@@ -216,8 +220,9 @@ async function createSymlink(target: string, linkPath: string): Promise<boolean>
     const realLinkDir = await resolveParentSymlinks(linkDir);
     const relativePath = relative(realLinkDir, target);
     const symlinkType = platform() === 'win32' ? 'junction' : undefined;
+    const symlinkTarget = symlinkType === 'junction' ? resolvedTarget : relativePath;
 
-    await symlink(relativePath, linkPath, symlinkType);
+    await symlink(symlinkTarget, linkPath, symlinkType);
     return true;
   } catch {
     return false;
@@ -277,6 +282,20 @@ export async function installSkillForAgent(
   }
 
   try {
+    // Never install onto (or inside) the source directory. This can happen with
+    // agent-specific project directories like OpenClaw's "skills" when users run
+    // `skills add ./skills --all`: the source `./skills/<name>` and destination
+    // `./skills/<name>` are the same path. Cleaning the destination would delete
+    // the user's source skill before we can link or copy it.
+    if (pathsOverlap(skill.path, agentDir)) {
+      return {
+        success: true,
+        path: agentDir,
+        mode: installMode,
+        skipped: true,
+      };
+    }
+
     // For copy mode, skip canonical directory and copy directly to agent location
     if (installMode === 'copy') {
       await cleanAndCreateDirectory(agentDir);
@@ -286,6 +305,16 @@ export async function installSkillForAgent(
         success: true,
         path: agentDir,
         mode: 'copy',
+      };
+    }
+
+    if (pathsOverlap(skill.path, canonicalDir)) {
+      return {
+        success: true,
+        path: canonicalDir,
+        canonicalPath: canonicalDir,
+        mode: 'symlink',
+        skipped: true,
       };
     }
 
