@@ -10,6 +10,7 @@ import { searchMultiselect } from './prompts/search-multiselect.ts';
 
 // Helper to check if a value is a cancel symbol (works with both clack and our custom prompts)
 const isCancelled = (value: unknown): value is symbol => typeof value === 'symbol';
+const EVE_AGENT_LABEL = 'eve agent';
 
 /**
  * Check if a source identifier (owner/repo format) represents a private GitHub repo.
@@ -201,6 +202,18 @@ function formatList(items: string[], maxShow: number = 5): string {
   const shown = items.slice(0, maxShow);
   const remaining = items.length - maxShow;
   return `${shown.join(', ')} +${remaining} more`;
+}
+
+function formatSkillPromptSubject(skills: Skill[]): string {
+  const names = skills.map((skill) => pc.cyan(getSkillDisplayName(skill)));
+  const namedSubject = formatList(names, 3);
+  return stripTerminalEscapes(namedSubject).length <= 80
+    ? namedSubject
+    : `${skills.length} selected skills`;
+}
+
+export function formatEveInstallPromptMessage(skills: Skill[]): string {
+  return `Detected an eve project. Install ${formatSkillPromptSubject(skills)} for your ${EVE_AGENT_LABEL} to use?`;
 }
 
 /**
@@ -1358,7 +1371,7 @@ export async function runAdd(args: string[], options: AddOptions = {}): Promise<
         const useEve = options.yes
           ? true
           : await p.confirm({
-              message: 'Detected an Eve project. Install skills for Eve?',
+              message: formatEveInstallPromptMessage(selectedSkills),
               initialValue: true,
             });
 
@@ -1370,7 +1383,7 @@ export async function runAdd(args: string[], options: AddOptions = {}): Promise<
 
         if (useEve) {
           targetAgents = ['eve'];
-          p.log.info(`Installing to: ${pc.cyan(agents.eve.displayName)}`);
+          p.log.info(`Installing to: ${pc.cyan(EVE_AGENT_LABEL)}`);
         } else {
           const selected = await selectAgentsInteractive({ global: options.global });
 

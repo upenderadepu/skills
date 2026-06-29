@@ -2,9 +2,30 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { existsSync, rmSync, mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { runCli } from './test-utils.ts';
+import { runCli, stripAnsi } from './test-utils.ts';
 import { shouldInstallInternalSkills } from './skills.ts';
-import { parseAddOptions, getLockSource } from './add.ts';
+import { parseAddOptions, getLockSource, formatEveInstallPromptMessage } from './add.ts';
+
+const noDetectedAgentEnv = {
+  AI_AGENT: '',
+  ANTIGRAVITY_AGENT: '',
+  AUGMENT_AGENT: '',
+  CLAUDE_CODE: '',
+  CLAUDE_CODE_IS_COWORK: '',
+  CLAUDECODE: '',
+  CODEX_CI: '',
+  CODEX_SANDBOX: '',
+  CODEX_THREAD_ID: '',
+  COPILOT_ALLOW_ALL: '',
+  COPILOT_GITHUB_TOKEN: '',
+  COPILOT_MODEL: '',
+  CURSOR_AGENT: '',
+  CURSOR_EXTENSION_HOST_ROLE: '',
+  CURSOR_TRACE_ID: '',
+  GEMINI_CLI: '',
+  OPENCODE_CLIENT: '',
+  REPL_ID: '',
+};
 
 describe('add command', () => {
   let testDir: string;
@@ -88,6 +109,43 @@ Instructions here.
     expect(result.stdout).toContain('my-skill');
     expect(result.stdout).toContain('Done!');
     expect(result.exitCode).toBe(0);
+  });
+
+  it('should describe Eve project installs as for the eve agent to use', () => {
+    const sourceDir = join(testDir, 'source');
+    const skillDir = join(sourceDir, 'eve-skill');
+    mkdirSync(skillDir, { recursive: true });
+    writeFileSync(
+      join(skillDir, 'SKILL.md'),
+      `---
+name: eve-skill
+description: Skill for eve wording
+---
+
+# Eve Skill
+
+Instructions here.
+`
+    );
+
+    const projectDir = join(testDir, 'project');
+    mkdirSync(join(projectDir, 'agent'), { recursive: true });
+    writeFileSync(
+      join(projectDir, 'package.json'),
+      JSON.stringify({ dependencies: { eve: '^0.11.5' } })
+    );
+
+    const result = runCli(
+      ['add', sourceDir, '-y', '--skill', 'eve-skill'],
+      projectDir,
+      noDetectedAgentEnv
+    );
+
+    expect(result.stdout).toContain('Installing to: eve agent');
+    expect(result.stdout).not.toContain('Installing to: Eve');
+    expect(result.stdout).toContain('Done!');
+    expect(result.exitCode).toBe(0);
+    expect(existsSync(join(projectDir, 'agent', 'skills', 'eve-skill', 'SKILL.md'))).toBe(true);
   });
 
   it('should filter skills by name with --skill flag', () => {
@@ -311,6 +369,18 @@ describe('getLockSource', () => {
 
   it('keeps normalized owner/repo for non-SSH remotes', () => {
     expect(getLockSource('https://github.com/owner/repo.git', 'owner/repo')).toBe('owner/repo');
+  });
+});
+
+describe('formatEveInstallPromptMessage', () => {
+  it('describes selected skills as for the eve agent to use', () => {
+    const message = formatEveInstallPromptMessage([
+      { name: 'eve-skill', description: 'Skill for eve wording', path: '/tmp/eve-skill' },
+    ]);
+
+    expect(stripAnsi(message)).toBe(
+      'Detected an eve project. Install eve-skill for your eve agent to use?'
+    );
   });
 });
 
