@@ -194,4 +194,11 @@ describe('git clone fallbacks', () => {
     );
     expect(execFileMock).not.toHaveBeenCalled();
   });
+
+  it('rejects the command-executing ext transport before invoking git', async () => {
+    await expect(cloneRepo('ext::sh -c id')).rejects.toThrow('Unsupported Git transport: ext');
+
+    expect(simpleGitMock).not.toHaveBeenCalled();
+    expect(execFileMock).not.toHaveBeenCalled();
+  });
 });

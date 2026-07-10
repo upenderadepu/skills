@@ -189,6 +189,10 @@ function buildGitHubAuthError(url: string, repo: GitHubRepoInfo | null, message:
 }
 
 export async function cloneRepo(url: string, ref?: string): Promise<string> {
+  if (/^ext::/i.test(url)) {
+    throw new GitCloneError('Unsupported Git transport: ext', url);
+  }
+
   const tempDir = await mkdtemp(join(tmpdir(), 'skills-'));
   const cloneOptions = ref ? ['--depth', '1', '--branch', ref] : ['--depth', '1'];
   const repo = parseGitHubRepoUrl(url);
