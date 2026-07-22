@@ -3,7 +3,7 @@
 The CLI for the open agent skills ecosystem.
 
 <!-- agent-list:start -->
-Supports **OpenCode**, **Claude Code**, **Codex**, **Cursor**, and [69 more](#supported-agents).
+Supports **OpenCode**, **Claude Code**, **Codex**, **Cursor**, and [70 more](#supported-agents).
 <!-- agent-list:end -->
 
 [![skills.sh](https://skills.sh/b/vercel-labs/skills)](https://skills.sh/vercel-labs/skills)
@@ -272,12 +272,14 @@ Skills can be installed to any of these agents:
 | Gemini CLI | `gemini-cli` | `.agents/skills/` | `~/.gemini/skills/` |
 | GitHub Copilot | `github-copilot` | `.agents/skills/` | `~/.copilot/skills/` |
 | Goose | `goose` | `.goose/skills/` | `~/.config/goose/skills/` |
+| Grok Build | `grok` | `.grok/skills/` | `~/.grok/skills/` |
 | Hermes Agent | `hermes-agent` | `.hermes/skills/` | `~/.hermes/skills/` |
 | inference.sh | `inference-sh` | `.inferencesh/skills/` | `~/.inferencesh/skills/` |
 | Jazz | `jazz` | `.jazz/skills/` | `~/.jazz/skills/` |
 | Junie | `junie` | `.junie/skills/` | `~/.junie/skills/` |
 | iFlow CLI | `iflow-cli` | `.iflow/skills/` | `~/.iflow/skills/` |
 | Kilo Code | `kilo` | `.kilocode/skills/` | `~/.kilocode/skills/` |
+| Kimchi | `kimchi` | `.kimchi/skills/` | `~/.config/kimchi/harness/skills/` |
 | Kiro CLI | `kiro-cli` | `.kiro/skills/` | `~/.kiro/skills/` |
 | Kode | `kode` | `.kode/skills/` | `~/.kode/skills/` |
 | Lingma | `lingma` | `.lingma/skills/` | `~/.lingma/skills/` |
@@ -402,12 +404,14 @@ to also discover `SKILL.md` files outside these container directories
 - `agent/skills/`
 - `.forge/skills/`
 - `.goose/skills/`
+- `.grok/skills/`
 - `.hermes/skills/`
 - `.inferencesh/skills/`
 - `.jazz/skills/`
 - `.junie/skills/`
 - `.iflow/skills/`
 - `.kilocode/skills/`
+- `.kimchi/skills/`
 - `.kiro/skills/`
 - `.kode/skills/`
 - `.lingma/skills/`
@@ -538,4 +542,4 @@ Telemetry is automatically disabled in CI environments.
 
 ## License
 
-MIT
+This project is licensed under the [MIT License](LICENSE).
